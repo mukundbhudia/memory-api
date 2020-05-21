@@ -4,7 +4,7 @@ const cors = require('cors')
 const app = express()
 const PORT = process.env.PORT || 4000
 
-const { connectDB, getDBClient, getClient, disconnectDB } = require('../src/dbClient')
+const { connectDB, getDBClient, getClient } = require('../src/dbClient')
 
 require('dotenv').config()
 
@@ -12,11 +12,11 @@ const bodyParserOptions = {
   inflate: true,
 }
 
+let session
+let dbClient
+
 const registerUser = async (user) => {
   let result
-  await connectDB()
-  const dbClient = getDBClient()
-  const session = getClient().startSession()
   await session.withTransaction(async () => {
     let existingUsers = []
     const cursor = await dbClient.collection('users').find({userName: user.userName})
@@ -27,26 +27,21 @@ const registerUser = async (user) => {
       result = await dbClient.collection('users').insertOne(user)
     }
   })
-  await session.endSession()
-  await disconnectDB()
   return result
 }
 
 const loginUser = async (user) => {
   let result
-  await connectDB()
-  const dbClient = getDBClient()
-  const session = getClient().startSession()
   await session.withTransaction(async () => {
     result = await dbClient.collection('users').findOne({userName: user.userName, password: user.password})
   })
-  await session.endSession()
-  await disconnectDB()
   return result
 }
 
 const startServer = async () => {
   await connectDB()
+  dbClient = getDBClient()
+  session = getClient().startSession()
   app.use(cors())
   app.use(bodyParser.json(bodyParserOptions))
   app.get('/', (req, res) => res.json({ msg: 'Welcome to the memory API!' }))
