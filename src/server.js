@@ -1,12 +1,14 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const jwt = require("jsonwebtoken");
 const cors = require('cors')
+
+require('dotenv').config()
+
 const app = express()
 const PORT = process.env.PORT || 4000
 
 const { connectDB, getDBClient, getClient } = require('../src/dbClient')
-
-require('dotenv').config()
 
 const bodyParserOptions = {
   inflate: true,
@@ -38,6 +40,25 @@ const loginUser = async (user) => {
   return result
 }
 
+const generateAccessToken = (username) => {
+  return jwt.sign(username, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1800s' });
+}
+
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization']
+  
+  const token = authHeader && authHeader.split(' ')[1]
+  
+  if (token == null) return res.sendStatus(401) // when there's an invalid token
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+    if (err) console.error(err)
+    if (err) return res.sendStatus(403)
+    req.user = user
+    next()
+  })
+}
+
 const startServer = async () => {
   await connectDB()
   dbClient = getDBClient()
@@ -55,10 +76,13 @@ const startServer = async () => {
     let result = { msg: 'notLoggedIn', token: null }
     data = await loginUser(req.body)
     if (data) {
-      result = { msg: 'notLoggedIn', token: data._id.toString() }
+      const token = generateAccessToken({ username: data.userName })
+      result = { msg: 'loggedIn', token: token }
     }
     res.json(result)
   })
+  app.get('/me', authenticateToken, (req, res) => res.json({ msg: 'This is a protected route' }))
+
   app.listen(PORT, () => console.log(`Listening at http://localhost:${PORT}`))
 }
   
