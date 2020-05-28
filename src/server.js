@@ -77,7 +77,7 @@ const startServer = async () => {
     data = await loginUser(req.body)
     if (data) {
       const token = generateAccessToken({ username: data.userName })
-      result = { msg: 'loggedIn', token: token }
+      result = { msg: 'loggedIn', token: token, user: { id: data._id.toString(), userName: data.userName, fullName: data.fullName } }
     }
     res.json(result)
   })
