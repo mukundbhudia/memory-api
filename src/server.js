@@ -49,11 +49,15 @@ const authenticateToken = (req, res, next) => {
   
   const token = authHeader && authHeader.split(' ')[1]
   
-  if (token == null) return res.sendStatus(401) // Send 401: Unauthorised when there's a nonexistant token
+  if (token == null) {
+    return res.sendStatus(401) // Send 401: Unauthorised when there's a nonexistant token
+  }
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-    if (err) console.error(err)
-    if (err) return res.sendStatus(403) // Send 403: Forbidden if token is invalid
+    if (err) {
+      console.error(err)
+      return res.status(403).json({ msg: 'Auth token inavalid' }) // Send 403: Forbidden if token is invalid
+    }
     req.user = user
     next()
   })
