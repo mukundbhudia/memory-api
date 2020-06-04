@@ -1,6 +1,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken')
+const auth = require('./auth')
 const cors = require('cors')
 
 require('dotenv').config()
@@ -26,6 +27,7 @@ const registerUser = async (user) => {
     if (existingUsers.length > 0) {
       result = { insertedId: null }
     } else {
+      user.password = await auth.generatePassword(user.password)
       result = await dbClient.collection('users').insertOne(user)
     }
   })
@@ -33,9 +35,15 @@ const registerUser = async (user) => {
 }
 
 const loginUser = async (user) => {
-  let result
+  let result = { loggedIn: false, userData: null }
   await session.withTransaction(async () => {
-    result = await dbClient.collection('users').findOne({userName: user.userName, password: user.password})
+    result.userData = await dbClient.collection('users').findOne({ userName: user.userName })
+    if (result.userData) {
+      const isPasswordValid = await auth.checkPassword(user.password, result.userData.password)
+      if (isPasswordValid) {
+        result.loggedIn = true
+      }
+    }
   })
   return result
 }
@@ -79,9 +87,18 @@ const startServer = async () => {
     let data
     let result = { msg: 'notLoggedIn', token: null }
     data = await loginUser(req.body)
-    if (data) {
+    
+    if (data && data.loggedIn === true && data.userData) {
       const token = generateAccessToken({ username: data.userName })
-      result = { msg: 'loggedIn', token: token, user: { id: data._id.toString(), userName: data.userName, fullName: data.fullName } }
+      result = {
+        msg: 'loggedIn', token: token, user: { 
+          id: data.userData._id.toString(),
+          userName: data.userData.userName,
+          fullName: data.userData.fullName,
+        }
+      }
+    } else if (data && data.loggedIn === false) {
+      result.msg = 'passwordIncorrect'
     }
     res.json(result)
   })
