@@ -98,7 +98,7 @@ const startServer = async () => {
         }
       }
     } else if (data && data.loggedIn === false) {
-      result.msg = 'passwordIncorrect'
+      result.msg = 'userOrPasswordIncorrect'
     }
     res.json(result)
   })
