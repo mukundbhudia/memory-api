@@ -19,16 +19,26 @@ let session
 let dbClient
 
 const registerUser = async (user) => {
-  let result
+  let result = { msg: '', registered: false, userData: null, token: null }
   await session.withTransaction(async () => {
     let existingUsers = []
     const cursor = await dbClient.collection('users').find({userName: user.userName})
     existingUsers = await cursor.toArray()
     if (existingUsers.length > 0) {
-      result = { insertedId: null }
+      result.msg = 'userAlreadyExists'
     } else {
       user.password = await auth.generatePassword(user.password)
-      result = await dbClient.collection('users').insertOne(user)
+      result.msg = 'userRegistered'
+      result.registered = true
+      const insertUser = await dbClient.collection('users').insertOne(user)
+      result.userData = {
+        id: insertUser.ops[0]._id.toString(),
+        userName: insertUser.ops[0].userName,
+        firstName: insertUser.ops[0].firstName,
+        lastName: insertUser.ops[0].lastName,
+      }
+      const regUserToken = generateAccessToken({ username: insertUser.ops[0].userName })
+      result.token = regUserToken
     }
   })
   return result
@@ -49,7 +59,7 @@ const loginUser = async (user) => {
 }
 
 const generateAccessToken = (username) => {
-  return jwt.sign(username, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1800s' });
+  return jwt.sign(username, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1800s' })
 }
 
 const authenticateToken = (req, res, next) => {
@@ -81,7 +91,13 @@ const startServer = async () => {
   app.post('/signup', async (req, res) => {
     let data
     data = await registerUser(req.body)
-    res.json({ msg: 'posted', userId: data.insertedId })
+    res.json({ 
+      msg: data.msg,
+      registered:
+      data.registered,
+      userData: data.userData,
+      token: data.token,
+    })
   })
   app.post('/login', async (req, res) => {
     let data
@@ -91,10 +107,11 @@ const startServer = async () => {
     if (data && data.loggedIn === true && data.userData) {
       const token = generateAccessToken({ username: data.userName })
       result = {
-        msg: 'loggedIn', token: token, user: { 
+        msg: 'loggedIn', token: token, user: {
           id: data.userData._id.toString(),
           userName: data.userData.userName,
-          fullName: data.userData.fullName,
+          firstName: data.userData.firstName,
+          lastName: data.userData.lastName,
         }
       }
     } else if (data && data.loggedIn === false) {
