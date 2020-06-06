@@ -17,8 +17,8 @@ const startServer = async () => {
   app.use(cors())
   app.use(bodyParser.json(bodyParserOptions))
   app.get('/', routes.home)
-  app.post('/signup', routes.signUp)
-  app.post('/login', routes.logIn)
+  app.post('/auth/signup', routes.signUp)
+  app.post('/auth/login', routes.logIn)
   // Any route after the below authenticateToken is protected
   app.use(routes.authenticateToken)
   app.get('/me', routes.me)
