@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const logger = require('./logger').initLogger()
 
 const saltRounds = 10
 
@@ -7,7 +8,7 @@ const generatePassword = async (password) => {
   try {
     return await bcrypt.hash(password, saltRounds)
   } catch (err) {
-    console.error(err)
+    logger.error(err)
     return err
   }
 }
@@ -16,7 +17,7 @@ const checkPassword = async (candidatePassword, existingHashedPassword) => {
   try {
     return await bcrypt.compare(candidatePassword, existingHashedPassword)
   } catch (err) {
-    console.error(err)
+    logger.error(err)
     return err
   }
 }
@@ -30,7 +31,7 @@ const verifyAccessToken = (tokenToVerify) => {
   
   jwt.verify(tokenToVerify, process.env.ACCESS_TOKEN_SECRET, (err, decodedToken) => {
     if (err) {
-      console.error(err)
+      logger.warn(err)
     } else {
       result = decodedToken
     }

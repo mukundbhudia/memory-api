@@ -1,3 +1,4 @@
+const logger = require('./logger').initLogger()
 const auth = require('./auth')
 const actions = require('./actions')
 
@@ -41,7 +42,7 @@ const logIn = async (req, res) => {
   data = await actions.loginUser(req.body)
   
   if (data && data.loggedIn === true && data.userData) {
-    const token = auth.generateAccessToken({ username: data.userName })
+    const token = auth.generateAccessToken({ username: data.userData.userName })
     result = {
       msg: 'loggedIn', token: token, user: {
         id: data.userData._id.toString(),
@@ -50,6 +51,7 @@ const logIn = async (req, res) => {
         lastName: data.userData.lastName,
       }
     }
+    logger.info(`User ${data.userData.userName} logged in`)
   } else if (data && data.loggedIn === false) {
     result.msg = 'userOrPasswordIncorrect'
   }

@@ -3,8 +3,8 @@ const bodyParser = require('body-parser')
 const routes = require('../src/modules/routes')
 
 const cors = require('cors')
-
 require('dotenv').config()
+const logger = require('../src/modules/logger').initLogger()
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -23,7 +23,11 @@ const startServer = async () => {
   app.use(routes.authenticateToken)
   app.get('/me', routes.me)
 
-  app.listen(PORT, () => console.log(`Listening at http://localhost:${PORT}`))
+  app.listen(PORT, () => {
+    const welcomeString = `Listening at http://localhost:${PORT}`
+    console.log(welcomeString)
+    logger.info(welcomeString)
+  })
 }
   
 startServer()

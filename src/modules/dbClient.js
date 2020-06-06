@@ -1,4 +1,5 @@
 const { MongoClient } = require('mongodb')
+const logger = require('./logger').initLogger()
 
 let client
 let dbName = 'memory'
@@ -14,6 +15,7 @@ const connectDB = async () => {
     client = await MongoClient.connect(dbURI, { useUnifiedTopology: true })
   } catch (error) {
     console.error(error)
+    logger.error(error)
   }
 }
 
