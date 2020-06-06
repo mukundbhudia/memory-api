@@ -25,8 +25,22 @@ const generateAccessToken = (username) => {
   return jwt.sign(username, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1800s' })
 }
 
+const verifyAccessToken = (tokenToVerify) => {
+  let result = null
+  
+  jwt.verify(tokenToVerify, process.env.ACCESS_TOKEN_SECRET, (err, decodedToken) => {
+    if (err) {
+      console.error(err)
+    } else {
+      result = decodedToken
+    }
+  })
+  return result
+}
+
 module.exports = {
   generatePassword,
   checkPassword,
   generateAccessToken,
+  verifyAccessToken,
 }
