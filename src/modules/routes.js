@@ -2,8 +2,7 @@ const auth = require('./auth')
 const actions = require('./actions')
 
 const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'] // TODO: use different header?
-  const token = authHeader && authHeader.split(' ')[1]
+  const token = req.headers['x-access-token']
 
   if (!token) {
     // Send 401: Unauthorised when there's a nonexistant token
@@ -12,13 +11,12 @@ const authenticateToken = (req, res, next) => {
     const decodedToken = auth.verifyAccessToken(token)
     if (decodedToken === null) {
        // Send 403: Forbidden if token is invalid
-      res.status(403).json({ msg: 'Auth token inavalid' })
+      return res.status(403).json({ msg: 'Auth token inavalid' })
     } else {
       req.user = decodedToken
+      return next()
     }
   }
-
-  next()
 }
 
 const home = (req, res) => {
