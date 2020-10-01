@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const logger = require('./logger').initLogger()
+const { logger } = require('./logger')
 
 const saltRounds = 10
 

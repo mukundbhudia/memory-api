@@ -4,7 +4,7 @@ const routes = require('../src/modules/routes')
 
 const cors = require('cors')
 require('dotenv').config()
-const logger = require('../src/modules/logger').initLogger()
+const { logger } = require('./modules/logger')
 
 const app = express()
 const PORT = process.env.PORT || 4000

@@ -1,5 +1,5 @@
 const { MongoClient } = require('mongodb')
-const logger = require('./logger').initLogger()
+const { logger } = require('./logger')
 
 let client
 let dbName = 'memory'
